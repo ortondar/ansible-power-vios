@@ -3,7 +3,7 @@
   hosts: Power_VIO
   gather_facts: no
 
-  user: root
+  user: ansible
 
   collections:
   - ibm.power_vios
