@@ -1,6 +1,6 @@
 ---
 - name: "backupios demo"
-  hosts: vios
+  #hosts: vios
   gather_facts: no
 
   user: root
