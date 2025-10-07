@@ -1,0 +1,8 @@
+plugins/modules/alt_root_vg.py pylint:consider-using-f-string
+plugins/modules/backupios.py pylint:consider-using-f-string
+plugins/modules/backupios.py pylint:unspecified-encoding
+plugins/modules/mapping_facts.py pylint:consider-using-f-string
+plugins/modules/updateios.py pylint:consider-using-f-string
+plugins/modules/viosbr.py pylint:consider-using-f-string
+plugins/modules/viosecure.py pylint:consider-using-f-string
+plugins/modules/alt_root_vg.py pylint:consider-using-dict-items

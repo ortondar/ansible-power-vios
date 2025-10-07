@@ -34,8 +34,10 @@ options:
     - C(remove) to remove the specified file sets from the system.
     - C(list) to list the file sets on the VIOS installation media that are
       available to be installed.
+    - C(remove_outdated_filesets) to remove all outdated filesets from the
+      system.
     type: str
-    choices: [ update, commit, cleanup, install, remove, list ]
+    choices: [ update, commit, cleanup, install, remove, list, remove_outdated_filesets ]
     required: true
   device:
     description:
@@ -68,6 +70,7 @@ options:
 notes:
   - A fix pack or service pack cannot be applied if the VIOS partition is part
     of a shared storage pool and the cluster node state is UP.
+  - remove_outdated_filesets action is supported from VIOS version 3.1.2.40 onwards
 '''
 
 EXAMPLES = r'''
@@ -134,6 +137,7 @@ import re
 
 from ansible.module_utils.basic import AnsibleModule
 
+results = None
 
 ioscli_cmd = '/usr/ios/cli/ioscli'
 
@@ -142,20 +146,19 @@ def get_ioslevel(module):
     """
     Return the latest installed maintenance level of the system.
     """
-    global results
 
     cmd = [ioscli_cmd, 'ioslevel']
     ret, stdout, stderr = module.run_command(cmd)
     if ret != 0:
         results['stdout'] = stdout
         results['stderr'] = stderr
-        results['msg'] = 'Could not retrieve ioslevel, return code {0}.'.format(ret)
+        results['msg'] = f'Could not retrieve ioslevel, return code {ret}.'
         module.fail_json(**results)
 
     ioslevel = stdout.split('\n')[0]
 
     if not re.match(r"^\d+\.\d+\.\d+\.\d+$", ioslevel):
-        results['msg'] = 'Could not parse ioslevel output {0}.'.format(ioslevel)
+        results['msg'] = f'Could not parse ioslevel output {ioslevel}.'
         module.fail_json(**results)
 
     results['ioslevel'] = ioslevel
@@ -170,7 +173,7 @@ def main():
         supports_check_mode=True,
         argument_spec=dict(
             action=dict(required=True, type='str',
-                        choices=['update', 'commit', 'cleanup', 'install', 'remove', 'list']),
+                        choices=['update', 'commit', 'cleanup', 'install', 'remove', 'list', 'remove_outdated_filesets']),
             device=dict(type='str'),
             accept_licenses=dict(type='bool', default=False),
             force=dict(type='bool', default=False),
@@ -220,6 +223,8 @@ def main():
         cmd += ['-cleanup']
     elif action == 'list':
         cmd += ['-list', '-dev', params['device']]
+    elif action == 'remove_outdated_filesets':
+        cmd += ['-remove_outdated_filesets']
 
     # Note: updateios is an interactive command.
     # We use the same mechanism nim uses (c_updateios.sh) to implement preview mode.
@@ -229,12 +234,12 @@ def main():
     # It is better to call clstartstop from the playbook or from a role
     # to remove the VIOS from the cluster before applying any update.
 
-    shcmd = "echo '{0}' | {1}".format(response, ' '.join(cmd))
+    shcmd = f"echo '{response}' | {' '.join(cmd)}"
     ret, stdout, stderr = module.run_command(shcmd, use_unsafe_shell=True)
     results['stdout'] = stdout
     results['stderr'] = stderr
     if ret != 0:
-        results['msg'] = 'Command \'{0}\' failed with return code {1}.'.format(shcmd, ret)
+        results['msg'] = f'Command \'{shcmd}\' failed with return code {ret}.'
         module.fail_json(**results)
 
     if action != 'list' and not module.check_mode:

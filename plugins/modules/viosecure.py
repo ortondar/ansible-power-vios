@@ -184,12 +184,12 @@ firewall:
 
 from ansible.module_utils.basic import AnsibleModule
 
+results = None
 
 ioscli_cmd = '/usr/ios/cli/ioscli'
 
 
 def security_apply(module, params):
-    global results
 
     cmd = [ioscli_cmd, 'viosecure']
     if params['level']:
@@ -203,7 +203,7 @@ def security_apply(module, params):
     if ret != 0:
         results['stdout'] = stdout
         results['stderr'] = stderr
-        results['msg'] = 'Could not apply security rules, return code {0}.'.format(ret)
+        results['msg'] = f'Could not apply security rules, return code {ret}.'
         module.fail_json(**results)
 
 
@@ -227,7 +227,6 @@ def firewall_view(module):
     all,21,any,ftp,0.0.0.0,0
     all,20,any,ftp-data,0.0.0.0,0
     """
-    global results
 
     # Do not use ':' as seperator because it causes problems with IPv6 addresses
     sep = ','
@@ -243,7 +242,7 @@ def firewall_view(module):
         if ret != 0:
             results['stdout'] = stdout
             results['stderr'] = stderr
-            results['msg'] = 'Could not retrieve {0} rules, return code {1}'.format(ip, ret)
+            results['msg'] = f'Could not retrieve {ip} rules, return code {ret}'
             module.fail_json(**results)
         # First line indicates state ON or OFF
         lines = stdout.split('\n')
@@ -277,7 +276,6 @@ def firewall_apply(module, params):
     """
     Apply the specified firewall settings.
     """
-    global results
 
     firewall = params['firewall']
 
@@ -319,7 +317,7 @@ def firewall_apply(module, params):
                 if ret != 0:
                     results['stdout'] = stdout
                     results['stderr'] = stderr
-                    results['msg'] = 'Could not apply rule, return code {0}.'.format(ret)
+                    results['msg'] = f'Could not apply rule, return code {ret}.'
                     module.fail_json(**results)
 
         # Check if firewall needs to be activated/deactivated
@@ -336,7 +334,7 @@ def firewall_apply(module, params):
         if ret != 0:
             results['stdout'] = stdout
             results['stderr'] = stderr
-            results['msg'] = 'Could not change firewall state, return code {0}.'.format(ret)
+            results['msg'] = f'Could not change firewall state, return code {ret}.'
             module.fail_json(**results)
 
 
